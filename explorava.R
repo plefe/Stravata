@@ -18,8 +18,6 @@ stravata <- stravata_dirty %>%
 
 str(stravata)
 
-hchart(stravata, type="bar", haesc(x) )
-
 hchart(stravata, "scatter", hcaes(x = ElapsedTime, y = MaxHeartRate)) %>%
   hc_title(text = "Activity time vs Max heart rate") %>%
   hc_xAxis(title = list(text = "Elapsed Time (seconds)")) %>%
@@ -66,82 +64,82 @@ library(highcharter)
 library(dplyr)
 library(lubridate)
 
-# Define UI for application
-ui <- dashboardPage(
-  dashboardHeader(title = "Strava Analysis"),
-  dashboardSidebar(
-    # Add filters to the sidebar
-    dateRangeInput("dateRange", "Date range:", start = min(stravata$ActivityDate), end = max(stravata$ActivityDate)),
-    selectInput("activityType", "Activity type:", choices = unique(stravata$ActivityType), selected = unique(stravata$ActivityType)[1])
-  ),
-  dashboardBody(
-    # Apply a theme
-    shinyUI(fluidPage(theme = shinytheme("cerulean"),
-                      # Create two tabs
-                      tabsetPanel(
-                        tabPanel("Scatter Plots", 
-                                 fluidRow(
-                                   box(highchartOutput("plot1", height = "500px")),
-                                   box(highchartOutput("plot2", height = "500px"))
-                                 )),
-                        tabPanel("Bar Plots", 
-                                 fluidRow(
-                                   box(highchartOutput("plot3", height = "500px")),
-                                   box(highchartOutput("plot4", height = "500px"))
-                                 ))
-                      )
-    ))
-  )
-)
-
-# Server logic
-server <- function(input, output) {
-  
-  # Filter data based on inputs
-  filteredData <- reactive({
-    stravata %>%
-      filter(ActivityDate >= input$dateRange[1] & ActivityDate <= input$dateRange[2]) %>%
-      filter(ActivityType == input$activityType)
-  })
-  
-  output$plot1 <- renderHighchart({
-    hchart(filteredData(), "scatter", hcaes(x = ElapsedTime, y = MaxHeartRate)) %>%
-      hc_title(text = "Elapsed Time vs Max Heart Rate") %>%
-      hc_xAxis(title = list(text = "Elapsed Time (seconds)")) %>%
-      hc_yAxis(title = list(text = "Max Heart Rate"))
-  })
-  
-  output$plot2 <- renderHighchart({
-    hchart(filteredData(), "scatter", hcaes(x = ElapsedTime, y = Distance)) %>%
-      hc_title(text = "Elapsed Time vs Distance") %>%
-      hc_xAxis(title = list(text = "Elapsed Time (seconds)")) %>%
-      hc_yAxis(title = list(text = "Distance"))
-  })
-  
-  output$plot3 <- renderHighchart({
-    filteredData() %>%
-      group_by(ActivityType) %>%
-      summarise(count = n()) %>%
-      hchart("column", hcaes(x = ActivityType, y = count)) %>%
-      hc_title(text = "Frequency of Activity Types") %>%
-      hc_xAxis(title = list(text = "Activity Type")) %>%
-      hc_yAxis(title = list(text = "Frequency"))
-  })
-  
-  output$plot4 <- renderHighchart({
-    filteredData() %>%
-      group_by(ActivityType) %>%
-      summarise(avg_distance = mean(Distance, na.rm = TRUE)) %>%
-      hchart("column", hcaes(x = ActivityType, y = avg_distance)) %>%
-      hc_title(text = "Average Distance by Activity Type") %>%
-      hc_xAxis(title = list(text = "Activity Type")) %>%
-      hc_yAxis(title = list(text = "Average Distance"))
-  })
-  
-}
-
-# Run the application 
-shinyApp(ui = ui, server = server)
+# # Define UI for application
+# ui <- dashboardPage(
+#   dashboardHeader(title = "Strava Analysis"),
+#   dashboardSidebar(
+#     # Add filters to the sidebar
+#     dateRangeInput("dateRange", "Date range:", start = min(stravata$ActivityDate), end = max(stravata$ActivityDate)),
+#     selectInput("activityType", "Activity type:", choices = unique(stravata$ActivityType), selected = unique(stravata$ActivityType)[1])
+#   ),
+#   dashboardBody(
+#     # Apply a theme
+#     shinyUI(fluidPage(theme = shinytheme("cerulean"),
+#                       # Create two tabs
+#                       tabsetPanel(
+#                         tabPanel("Scatter Plots", 
+#                                  fluidRow(
+#                                    box(highchartOutput("plot1", height = "500px")),
+#                                    box(highchartOutput("plot2", height = "500px"))
+#                                  )),
+#                         tabPanel("Bar Plots", 
+#                                  fluidRow(
+#                                    box(highchartOutput("plot3", height = "500px")),
+#                                    box(highchartOutput("plot4", height = "500px"))
+#                                  ))
+#                       )
+#     ))
+#   )
+# )
+# 
+# # Server logic
+# server <- function(input, output) {
+#   
+#   # Filter data based on inputs
+#   filteredData <- reactive({
+#     stravata %>%
+#       filter(ActivityDate >= input$dateRange[1] & ActivityDate <= input$dateRange[2]) %>%
+#       filter(ActivityType == input$activityType)
+#   })
+#   
+#   output$plot1 <- renderHighchart({
+#     hchart(filteredData(), "scatter", hcaes(x = ElapsedTime, y = MaxHeartRate)) %>%
+#       hc_title(text = "Elapsed Time vs Max Heart Rate") %>%
+#       hc_xAxis(title = list(text = "Elapsed Time (seconds)")) %>%
+#       hc_yAxis(title = list(text = "Max Heart Rate"))
+#   })
+#   
+#   output$plot2 <- renderHighchart({
+#     hchart(filteredData(), "scatter", hcaes(x = ElapsedTime, y = Distance)) %>%
+#       hc_title(text = "Elapsed Time vs Distance") %>%
+#       hc_xAxis(title = list(text = "Elapsed Time (seconds)")) %>%
+#       hc_yAxis(title = list(text = "Distance"))
+#   })
+#   
+#   output$plot3 <- renderHighchart({
+#     filteredData() %>%
+#       group_by(ActivityType) %>%
+#       summarise(count = n()) %>%
+#       hchart("column", hcaes(x = ActivityType, y = count)) %>%
+#       hc_title(text = "Frequency of Activity Types") %>%
+#       hc_xAxis(title = list(text = "Activity Type")) %>%
+#       hc_yAxis(title = list(text = "Frequency"))
+#   })
+#   
+#   output$plot4 <- renderHighchart({
+#     filteredData() %>%
+#       group_by(ActivityType) %>%
+#       summarise(avg_distance = mean(Distance, na.rm = TRUE)) %>%
+#       hchart("column", hcaes(x = ActivityType, y = avg_distance)) %>%
+#       hc_title(text = "Average Distance by Activity Type") %>%
+#       hc_xAxis(title = list(text = "Activity Type")) %>%
+#       hc_yAxis(title = list(text = "Average Distance"))
+#   })
+#   
+# }
+# 
+# # Run the application 
+# shinyApp(ui = ui, server = server)
 
 
 #ai try dashboard 2.0####
