@@ -152,10 +152,11 @@ ui <- dashboardPage(
   dashboardHeader(title = "Strava Dashboard"),
   dashboardSidebar(
     sidebarMenu(
-      menuItem("Virtual Ride", tabName = "virtual_ride", icon = icon("biking")),
-      menuItem("Ride", tabName = "ride", icon = icon("biking")),
+      menuItem("Virtual Ride", tabName = "virtual_ride", icon = icon("person-biking")),
+      menuItem("Ride", tabName = "ride", icon = icon("bicycle")),
       menuItem("Run", tabName = "run", icon = icon("running")),
-      menuItem("Weight Training", tabName = "weight_training", icon = icon("dumbbell"))
+      menuItem("Weight Training", tabName = "weight_training", icon = icon("dumbbell")),
+      dateRangeInput("dateRange", "Date range:", start = min(stravata$ActivityDate), end = max(stravata$ActivityDate))
     )
   ),
   dashboardBody(
@@ -190,50 +191,56 @@ ui <- dashboardPage(
 
 # Server
 server <- function(input, output) {
+  
+# Filter data based on inputs
+    filteredData <- reactive({
+      stravata %>%
+        filter(ActivityDate >= input$dateRange[1] & ActivityDate <= input$dateRange[2])})
+  
   output$virtual_ride_plot1 <- renderHighchart({
-    virtual_ride_data <- stravata[stravata$ActivityType == "Virtual Ride", ]
+    virtual_ride_data <- filteredData()[stravata$ActivityType == "Virtual Ride", ]
     hchart(virtual_ride_data, "scatter", hcaes(x = Distance, y = AverageWatts)) %>%
       hc_title(text = "Watts over Time for Virtual Rides")
   })
   
   output$virtual_ride_plot2 <- renderHighchart({
-    virtual_ride_data <- stravata[stravata$ActivityType == "Virtual Ride", ]
+    virtual_ride_data <- filteredData()[stravata$ActivityType == "Virtual Ride", ]
     hchart(virtual_ride_data, "scatter", hcaes(x = Distance, y = Calories)) %>%
       hc_title(text = "Calories over Time for Virtual Rides")
   })
   
   output$ride_plot1 <- renderHighchart({
-    ride_data <- stravata[stravata$ActivityType == "Ride", ]
+    ride_data <- filteredData()[stravata$ActivityType == "Ride", ]
     hchart(ride_data, "scatter", hcaes(x = Distance, y = AverageWatts)) %>%
       hc_title(text = "Watts over Time for Rides")
   })
   
   output$ride_plot2 <- renderHighchart({
-    ride_data <- stravata[stravata$ActivityType == "Ride", ]
+    ride_data <- filteredData()[stravata$ActivityType == "Ride", ]
     hchart(ride_data, "scatter", hcaes(x = Distance, y = Calories)) %>%
       hc_title(text = "Calories over Time for Rides")
   })
   
   output$run_plot1 <- renderHighchart({
-    run_data <- stravata[stravata$ActivityType == "Run", ]
+    run_data <- filteredData()[stravata$ActivityType == "Run", ]
     hchart(run_data, "scatter", hcaes(x = Distance, y = Calories)) %>%
       hc_title(text = "Calories over Distance for Runs")
   })
   
   output$run_plot2 <- renderHighchart({
-    run_data <- stravata[stravata$ActivityType == "Run", ]
+    run_data <- filteredData()[stravata$ActivityType == "Run", ]
     hchart(run_data, "scatter", hcaes(x = Distance, y = ElapsedTime)) %>%
       hc_title(text = "Calories over Distance for Runs")
   })
   
   output$weight_training_plot1 <- renderHighchart({
-    weight_training_data <- stravata[stravata$ActivityType == "Weight Training", ]
+    weight_training_data <- filteredData()[stravata$ActivityType == "Weight Training", ]
     hchart(weight_training_data, "scatter", hcaes(x = ElapsedTime, y = MaxHeartRate)) %>%
       hc_title(text = "Max Heart Rate over Time for Weight Training")
   })
   
   output$weight_training_plot2 <- renderHighchart({
-    weight_training_data <- stravata[stravata$ActivityType == "Weight Training", ]
+    weight_training_data <- filteredData()[stravata$ActivityType == "Weight Training", ]
     hchart(weight_training_data, "scatter", hcaes(x = ElapsedTime, y = Calories)) %>%
       hc_title(text = "Calories over Time for Weight Training")
   })
