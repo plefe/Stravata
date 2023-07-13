@@ -2,29 +2,33 @@ library(readxl)
 library(tidyverse)
 library(janitor)
 library(highcharter)
+library(fs)
 #test
 stravata_dirty <- read.csv("strava.csv")
-
+stravata_dirty <- map_dfr(dir_ls("C:/Users/e44509/OneDrive - Nebraska Methodist Health System/Desktop/Stravata-2", regexp = '.csv'), read_csv, .id = "Person")
+str#mutate(Person = case_when(grepl('activites', Person)) ~ Luke)
 stravata <- stravata_dirty %>%
   #mutate()
-  select(-c(Filename, Athlete.Weight, Commute.1, From.Upload, Activity.ID, Activity.Description,
-            Activity.Private.Note, Perceived.Exertion, Media, Prefer.Perceived.Exertion,
-            Perceived.Relative.Effort, starts_with("X.span"))) %>%
+  clean_names('upper_camel') %>% 
+  select(-c(AthleteWeight, Commute10, FromUpload, ActivityId, ActivityDescription,
+            ActivityPrivateNote, PerceivedExertion, Media, PreferPerceivedExertion,
+            PerceivedRelativeEffort, ElapsedTime16, starts_with("Span"))) %>%
   .[ , colSums(is.na(.)) != nrow(.)] %>% 
-  mutate(Activity.Date = as.POSIXct(Activity.Date, format = "%b %d, %Y, %I:%M:%S %p")) %>%
-  mutate(Elapsed.Time = round(Elapsed.Time/60, 2)) %>% 
-  mutate(Distance = round(Distance*0.621371, 2)) %>% 
-  clean_names('upper_camel')
+  mutate(Person = case_when(grepl('strava', Person) ~ "Parker", T~"Luke")) %>% 
+  mutate(ActivityDate = as.POSIXct(ActivityDate, format = "%b %d, %Y, %I:%M:%S %p")) %>%
+  mutate(Minutes = round(as.numeric(ElapsedTime6)/60, 2)) %>% 
+  mutate(Miles = round(as.numeric(Distance18)*0.621371, 2)) %>% 
+  rename(MaxHeartRate = MaxHeartRate8)
 
 str(stravata)
 
-hchart(stravata, "scatter", hcaes(x = ElapsedTime, y = MaxHeartRate)) %>%
+hchart(stravata, "scatter", hcaes(x = Minutes, y = MaxHeartRate)) %>%
   hc_title(text = "Activity time vs Max heart rate") %>%
   hc_xAxis(title = list(text = "Elapsed Time (seconds)")) %>%
   hc_yAxis(title = list(text = "Max Heart Rate"))
 
 #distance
-hchart(stravata, "column", hcaes(x = Distance)) %>%
+hchart(stravata, "column", hcaes(x = Miles)) %>%
   hc_title(text = "Distribution of Activity Distance") %>%
   hc_xAxis(title = list(text = "Distance"))
 
@@ -198,50 +202,50 @@ server <- function(input, output) {
         filter(ActivityDate >= input$dateRange[1] & ActivityDate <= input$dateRange[2])})
   
   output$virtual_ride_plot1 <- renderHighchart({
-    virtual_ride_data <- filteredData()[stravata$ActivityType == "Virtual Ride", ]
-    hchart(virtual_ride_data, "scatter", hcaes(x = Distance, y = AverageWatts)) %>%
+    virtual_ride_data <- filteredData()[filteredData()$ActivityType == "Virtual Ride", ]
+    hchart(virtual_ride_data, "scatter", hcaes(x = Miles, y = AverageWatts)) %>%
       hc_title(text = "Watts over Time for Virtual Rides")
   })
   
   output$virtual_ride_plot2 <- renderHighchart({
-    virtual_ride_data <- filteredData()[stravata$ActivityType == "Virtual Ride", ]
-    hchart(virtual_ride_data, "scatter", hcaes(x = Distance, y = Calories)) %>%
+    virtual_ride_data <- filteredData()[filteredData()$ActivityType == "Virtual Ride", ]
+    hchart(virtual_ride_data, "scatter", hcaes(x = Miles, y = Calories)) %>%
       hc_title(text = "Calories over Time for Virtual Rides")
   })
   
   output$ride_plot1 <- renderHighchart({
-    ride_data <- filteredData()[stravata$ActivityType == "Ride", ]
-    hchart(ride_data, "scatter", hcaes(x = Distance, y = AverageWatts)) %>%
+    ride_data <- filteredData()[filteredData()$ActivityType == "Ride", ]
+    hchart(ride_data, "scatter", hcaes(x = Miles, y = AverageWatts)) %>%
       hc_title(text = "Watts over Time for Rides")
   })
   
   output$ride_plot2 <- renderHighchart({
-    ride_data <- filteredData()[stravata$ActivityType == "Ride", ]
-    hchart(ride_data, "scatter", hcaes(x = Distance, y = Calories)) %>%
+    ride_data <- filteredData()[filteredData()$ActivityType == "Ride", ]
+    hchart(ride_data, "scatter", hcaes(x = Miles, y = Calories)) %>%
       hc_title(text = "Calories over Time for Rides")
   })
   
   output$run_plot1 <- renderHighchart({
-    run_data <- filteredData()[stravata$ActivityType == "Run", ]
-    hchart(run_data, "scatter", hcaes(x = Distance, y = Calories)) %>%
-      hc_title(text = "Calories over Distance for Runs")
+    run_data <- filteredData()[filteredData()$ActivityType == "Run", ]
+    hchart(run_data, "scatter", hcaes(x = Miles, y = Calories)) %>%
+      hc_title(text = "Calories over Miles for Runs")
   })
   
   output$run_plot2 <- renderHighchart({
-    run_data <- filteredData()[stravata$ActivityType == "Run", ]
-    hchart(run_data, "scatter", hcaes(x = Distance, y = ElapsedTime)) %>%
-      hc_title(text = "Calories over Distance for Runs")
+    run_data <- filteredData()[filteredData()$ActivityType == "Run", ]
+    hchart(run_data, "scatter", hcaes(x = Miles, y = Minutes)) %>%
+      hc_title(text = "Calories over Miles for Runs")
   })
   
   output$weight_training_plot1 <- renderHighchart({
-    weight_training_data <- filteredData()[stravata$ActivityType == "Weight Training", ]
-    hchart(weight_training_data, "scatter", hcaes(x = ElapsedTime, y = MaxHeartRate)) %>%
+    weight_training_data <- filteredData()[filteredData()$ActivityType == "Weight Training", ]
+    hchart(weight_training_data, "scatter", hcaes(x = Minutes, y = MaxHeartRate)) %>%
       hc_title(text = "Max Heart Rate over Time for Weight Training")
   })
   
   output$weight_training_plot2 <- renderHighchart({
-    weight_training_data <- filteredData()[stravata$ActivityType == "Weight Training", ]
-    hchart(weight_training_data, "scatter", hcaes(x = ElapsedTime, y = Calories)) %>%
+    weight_training_data <- filteredData()[filteredData()$ActivityType == "Weight Training", ]
+    hchart(weight_training_data, "scatter", hcaes(x = Minutes, y = Calories)) %>%
       hc_title(text = "Calories over Time for Weight Training")
   })
 }
